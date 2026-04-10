@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Raise Complaint</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="navbar">
+  <a href="index.html">Home</a>
+  <a href="raise.html">Raise Complaint</a>
+  <a href="admin.html">Admin</a>
+</div>
+
+<div class="container">
+<h2>Raise Complaint</h2>
+
+<form id="form">
+  <input type="number" id="student_id" placeholder="Student ID" required>
+  <input type="text" id="category" placeholder="Category" required>
+  <textarea id="description" placeholder="Description" required></textarea>
+  <button type="submit">Submit</button>
+</form>
+
+<p id="msg"></p>
+</div>
+
+<script>
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const data = {
+    student_id: document.getElementById("student_id").value,
+    category: document.getElementById("category").value,
+    description: document.getElementById("description").value
+  };
+
+  const res = await fetch("http://127.0.0.1:3000/api/complaint", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.text();
+  document.getElementById("msg").innerText = result;
+});
+</script>
+
+</body>
+</html>

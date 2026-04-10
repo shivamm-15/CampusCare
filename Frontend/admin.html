@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="navbar">
+  <a href="index.html">Home</a>
+  <a href="raise.html">Raise Complaint</a>
+  <a href="admin.html">Admin</a>
+</div>
+
+<div class="container">
+<h2>Admin Dashboard</h2>
+
+<div class="card-container">
+  <div class="card" id="total">Total: 0</div>
+  <div class="card" id="open">Open: 0</div>
+  <div class="card" id="resolved">Resolved: 0</div>
+</div>
+
+<select id="filter">
+  <option value="ALL">All</option>
+  <option value="OPEN">Open</option>
+  <option value="IN_PROGRESS">In Progress</option>
+  <option value="RESOLVED">Resolved</option>
+</select>
+
+<br><br>
+
+<table id="table"></table>
+</div>
+
+<script>
+let allData = [];
+
+async function loadData() {
+  const res = await fetch("http://127.0.0.1:3000/api/complaints");
+  allData = await res.json();
+
+  updateDashboard(allData);
+  renderTable(allData);
+}
+
+function updateDashboard(data) {
+document.getElementById("total").innerText = "Total: " + data.length;  const open = data.filter(c => c.status === "OPEN").length;
+  const resolved = data.filter(c => c.status === "RESOLVED").length;
+
+  document.getElementById("open").innerText = "Open: " + open;
+  document.getElementById("resolved").innerText = "Resolved: " + resolved;
+}
+
+function renderTable(data) {
+  const table = document.getElementById("table");
+
+  table.innerHTML = `
+    <tr>
+      <th>ID</th>
+      <th>Student</th>
+      <th>Category</th>
+      <th>Status</th>
+      <th>Assign</th>
+      <th>Resolve</th>
+    </tr>
+  `;
+
+  data.forEach(c => {
+    const row = table.insertRow();
+
+    row.insertCell(0).innerText = c.complaint_id;
+    row.insertCell(1).innerText = c.student_id;
+    row.insertCell(2).innerText = c.category;
+    row.insertCell(3).innerText = c.status;
+
+    const assignBtn = document.createElement("button");
+    assignBtn.innerText = "Assign";
+    assignBtn.classList.add("assign");
+
+    assignBtn.onclick = async () => {
+      await fetch("http://127.0.0.1:3000/api/assign", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          complaint_id: c.complaint_id,
+          staff_id: 1
+        })
+      });
+      location.reload();
+    };
+
+    row.insertCell(4).appendChild(assignBtn);
+
+    const resolveBtn = document.createElement("button");
+    resolveBtn.innerText = "Resolve";
+    resolveBtn.classList.add("resolve");
+
+    resolveBtn.onclick = async () => {
+      await fetch(`http://127.0.0.1:3000/api/status/${c.complaint_id}`, {
+        method: "PUT",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          status: "RESOLVED"
+        })
+      });
+      location.reload();
+    };
+
+    row.insertCell(5).appendChild(resolveBtn);
+  });
+}
+
+document.getElementById("filter").addEventListener("change", (e) => {
+  const value = e.target.value;
+
+  if (value === "ALL") {
+    renderTable(allData);
+  } else {
+    renderTable(allData.filter(c => c.status === value));
+  }
+});
+
+loadData();
+</script>
+
+</body>
+</html>
